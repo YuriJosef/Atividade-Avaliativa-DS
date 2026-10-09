@@ -2,6 +2,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -36,6 +37,8 @@ class Questao02Test {
     @Test
     void deveAguardarCarregamentoDinamicoTerminar() {
         driver.get("https://the-internet.herokuapp.com/dynamic_loading/1");
+        wait.until(driver -> Boolean.TRUE.equals(((JavascriptExecutor) driver)
+            .executeScript("return typeof window.jQuery === 'function'")));
         driver.findElement(By.xpath("//button[normalize-space()='Start']")).click();
 
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loading")));
