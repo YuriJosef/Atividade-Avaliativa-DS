@@ -10,7 +10,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,28 +37,30 @@ class Questao03Test {
     @Test
     void deveExecutarLoginCarrinhoERemocao() {
         driver.get("https://www.saucedemo.com/");
-        driver.findElement(By.cssSelector("[testId='username']")).sendKeys("standard_user");
-        driver.findElement(By.cssSelector("[testId='password']")).sendKeys("secret_sauce");
-        driver.findElement(By.cssSelector("[testId='login-button']")).click();
+        driver.findElement(By.cssSelector("[data-test='username']")).sendKeys("standard_user");
+        driver.findElement(By.cssSelector("[data-test='password']")).sendKeys("secret_sauce");
+        driver.findElement(By.cssSelector("[data-test='login-button']")).click();
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("[data-test='shopping-cart-link']")));
-        List<WebElement> addToCartButtons = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                By.xpath("//button[normalize-space()='Add to cart']")));
-        assertTrue(addToCartButtons.size() >= 3);
-        addToCartButtons.get(0).click();
-        addToCartButtons.get(1).click();
-        addToCartButtons.get(2).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='inventory-container']")));
+        assertTrue(driver.findElement(By.cssSelector("[data-test='title']")).getText().contains("Products"),
+            "A página de produtos deve ser exibida após o login");
+
+        String[] productIds = {"sauce-labs-backpack", "sauce-labs-bike-light", "sauce-labs-bolt-t-shirt"};
+        for (int index = 0; index < productIds.length; index++) {
+            driver.findElement(By.cssSelector("[data-test='add-to-cart-" + productIds[index] + "']")).click();
+            int expectedCount = index + 1;
+            wait.until(ExpectedConditions.textToBe(By.cssSelector("[data-test='shopping-cart-badge']"),
+                String.valueOf(expectedCount)));
+        }
+
+        assertEquals("3", driver.findElement(By.cssSelector("[data-test='shopping-cart-badge']")).getText());
+        driver.findElement(By.cssSelector("[data-test='remove-sauce-labs-backpack']")).click();
+        wait.until(ExpectedConditions.textToBe(By.cssSelector("[data-test='shopping-cart-badge']"), "2"));
 
         driver.findElement(By.cssSelector("[data-test='shopping-cart-link']")).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='shopping-cart-badge']")));
-        assertEquals("3", driver.findElement(By.cssSelector("[data-test='shopping-cart-badge']")).getText());
-
-        List<WebElement> removeButtons = driver.findElements(By.cssSelector("[testId^='remove-']"));
-        assertTrue(removeButtons.size() >= 1);
-        removeButtons.get(0).click();
-
-        WebElement badge = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.cssSelector("[data-test='shopping-cart-badge']")));
-        assertEquals("2", badge.getText());
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='cart-list']")));
+        wait.until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("[data-test='inventory-item']"), 2));
+        assertEquals(2, driver.findElements(By.cssSelector("[data-test='inventory-item']")).size());
+        assertEquals("2", driver.findElement(By.cssSelector("[data-test='shopping-cart-badge']")).getText());
     }
 }

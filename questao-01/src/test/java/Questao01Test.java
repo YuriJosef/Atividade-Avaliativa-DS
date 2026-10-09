@@ -10,6 +10,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -40,8 +41,9 @@ class Questao01Test {
         driver.findElement(By.id("password")).sendKeys("");
         driver.findElement(By.cssSelector("#login button[type='submit']")).click();
 
-        WebElement errorMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("flash")));
+        WebElement errorMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div#flash")));
         assertTrue(errorMessage.getText().contains("Your username is invalid!"));
-        assertTrue(errorMessage.getAttribute("class").contains("error"));
+        assertTrue(Arrays.asList(errorMessage.getAttribute("class").split("\\s+")).contains("error"),
+            "O elemento #flash deve possuir a classe CSS error");
     }
 }

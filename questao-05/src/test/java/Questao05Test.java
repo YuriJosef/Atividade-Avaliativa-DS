@@ -16,6 +16,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 class Questao05Test {
     private WebDriver driver;
     private WebDriverWait wait;
@@ -39,22 +43,28 @@ class Questao05Test {
     @Test
     void deveMapearEFiltrarProdutosAbaixoDeVinteDollars() {
         driver.get("https://www.saucedemo.com/");
-        driver.findElement(By.cssSelector("[testId='username']")).sendKeys("standard_user");
-        driver.findElement(By.cssSelector("[testId='password']")).sendKeys("secret_sauce");
-        driver.findElement(By.cssSelector("[testId='login-button']")).click();
+        driver.findElement(By.cssSelector("[data-test='username']")).sendKeys("standard_user");
+        driver.findElement(By.cssSelector("[data-test='password']")).sendKeys("secret_sauce");
+        driver.findElement(By.cssSelector("[data-test='login-button']")).click();
 
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='inventory-container']")));
+        assertTrue(driver.findElement(By.cssSelector("[data-test='title']")).getText().contains("Products"));
         wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("[data-test='inventory-item-name']")));
         List<WebElement> productNames = driver.findElements(By.cssSelector("[data-test='inventory-item-name']"));
         List<WebElement> productPrices = driver.findElements(By.cssSelector("[data-test='inventory-item-price']"));
+        assertFalse(productNames.isEmpty(), "Nenhum produto foi carregado na página de inventário");
+        assertEquals(productNames.size(), productPrices.size(), "Cada produto deve possuir nome e preço");
         Set<String> uniqueProducts = new LinkedHashSet<>();
         BigDecimal threshold = new BigDecimal("20.00");
 
         for (int index = 0; index < productNames.size(); index++) {
             String name = productNames.get(index).getText().trim();
-            BigDecimal price = new BigDecimal(productPrices.get(index).getText()
-                    .replaceAll("[^0-9.-]", ""));
+            String priceText = productPrices.get(index).getText().replaceAll("[^0-9.]", "");
+            assertFalse(name.isEmpty(), "Cada produto deve possuir um nome");
+            assertFalse(priceText.isEmpty(), "Cada produto deve possuir um preço numérico");
+            BigDecimal price = new BigDecimal(priceText);
             if (price.compareTo(threshold) < 0) {
-                uniqueProducts.add(name + " - $" + price);
+                uniqueProducts.add(name + " - $" + price.toPlainString());
             }
         }
 

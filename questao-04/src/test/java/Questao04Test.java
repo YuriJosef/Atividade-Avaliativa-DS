@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class Questao04Test {
@@ -39,20 +40,29 @@ class Questao04Test {
     @Test
     void deveIdentificarLaptopMaisCaro() {
         driver.get("https://www.demoblaze.com/");
+        List<WebElement> initialCards = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
+            By.cssSelector("#tbodyid .card")));
+        WebElement firstInitialCard = initialCards.get(0);
         WebElement laptopsMenu = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//a[normalize-space()='Laptops']")));
         laptopsMenu.click();
 
-        wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector(".card")));
-        List<WebElement> cards = driver.findElements(By.cssSelector(".card"));
+        wait.until(ExpectedConditions.stalenessOf(firstInitialCard));
+        List<WebElement> cards = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
+            By.cssSelector("#tbodyid .card")));
+        assertFalse(cards.isEmpty(), "Nenhum laptop foi carregado após selecionar a categoria Laptops");
         List<String> names = new ArrayList<>();
         List<BigDecimal> prices = new ArrayList<>();
 
         for (WebElement card : cards) {
             WebElement nameElement = card.findElement(By.cssSelector(".card-title a"));
             WebElement priceElement = card.findElement(By.cssSelector("h5"));
-            names.add(nameElement.getText().trim());
-            prices.add(new BigDecimal(priceElement.getText().replaceAll("[^0-9.-]", "")));
+            String name = nameElement.getText().trim();
+            String priceText = priceElement.getText().replaceAll("[^0-9.]", "");
+            assertFalse(name.isEmpty(), "Cada laptop exibido deve possuir um nome");
+            assertFalse(priceText.isEmpty(), "Cada laptop exibido deve possuir um preço numérico");
+            names.add(name);
+            prices.add(new BigDecimal(priceText));
         }
 
         int mostExpensiveIndex = 0;

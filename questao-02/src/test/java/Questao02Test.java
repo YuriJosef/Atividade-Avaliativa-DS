@@ -3,6 +3,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -37,10 +38,10 @@ class Questao02Test {
         driver.get("https://the-internet.herokuapp.com/dynamic_loading/1");
         driver.findElement(By.xpath("//button[normalize-space()='Start']")).click();
 
-        assertTrue(wait.until(ExpectedConditions.textToBePresentInElement(By.id("loading"), "Loading...")));
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loading")));
 
         WebElement result = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("finish")));
-        assertTrue(result.getText().contains("Hello World!"));
+        assertTrue(result.isDisplayed(), "O resultado deve estar visível");
+        assertTrue(result.getText().contains("Hello World!"), "O resultado deve conter Hello World!");
     }
 }
