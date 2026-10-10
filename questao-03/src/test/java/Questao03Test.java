@@ -2,8 +2,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -47,20 +47,30 @@ class Questao03Test {
 
         String[] productIds = {"sauce-labs-backpack", "sauce-labs-bike-light", "sauce-labs-bolt-t-shirt"};
         for (int index = 0; index < productIds.length; index++) {
-            driver.findElement(By.cssSelector("[data-test='add-to-cart-" + productIds[index] + "']")).click();
+            String addButton = "[data-test='add-to-cart-" + productIds[index] + "']";
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();",
+                driver.findElement(By.cssSelector(addButton)));
+            wait.until(ExpectedConditions.textToBe(By.cssSelector(
+                "[data-test='remove-" + productIds[index] + "']"), "Remove"));
             int expectedCount = index + 1;
             wait.until(ExpectedConditions.textToBe(By.cssSelector("[data-test='shopping-cart-badge']"),
                 String.valueOf(expectedCount)));
         }
 
         assertEquals("3", driver.findElement(By.cssSelector("[data-test='shopping-cart-badge']")).getText());
-        driver.findElement(By.cssSelector("[data-test='remove-sauce-labs-backpack']")).click();
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();",
+            driver.findElement(By.cssSelector("[data-test='shopping-cart-link']")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='cart-list']")));
+        wait.until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("[data-test='inventory-item']"), 3));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();",
+            driver.findElement(By.cssSelector("[data-test='remove-sauce-labs-backpack']")));
         wait.until(ExpectedConditions.textToBe(By.cssSelector("[data-test='shopping-cart-badge']"), "2"));
 
-        driver.findElement(By.cssSelector("[data-test='shopping-cart-link']")).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-test='cart-list']")));
         wait.until(ExpectedConditions.numberOfElementsToBe(By.cssSelector("[data-test='inventory-item']"), 2));
         assertEquals(2, driver.findElements(By.cssSelector("[data-test='inventory-item']")).size());
         assertEquals("2", driver.findElement(By.cssSelector("[data-test='shopping-cart-badge']")).getText());
+        assertTrue(driver.findElements(By.cssSelector("[data-test='inventory-item-name']")).stream()
+            .noneMatch(item -> item.getText().equals("Sauce Labs Backpack")),
+            "A mochila removida não deve permanecer no carrinho");
     }
 }

@@ -7,6 +7,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -36,11 +37,25 @@ class Questao02Test {
 
     @Test
     void deveAguardarCarregamentoDinamicoTerminar() {
-        driver.get("https://the-internet.herokuapp.com/dynamic_loading/1");
-        wait.until(driver -> Boolean.TRUE.equals(((JavascriptExecutor) driver)
-            .executeScript("return typeof window.jQuery === 'function'")));
-        driver.findElement(By.xpath("//button[normalize-space()='Start']")).click();
+        boolean jqueryLoaded = false;
+        for (int attempt = 0; attempt < 3 && !jqueryLoaded; attempt++) {
+            driver.get("https://the-internet.herokuapp.com/dynamic_loading/1");
+            try {
+                new WebDriverWait(driver, Duration.ofSeconds(5)).until(currentDriver ->
+                    Boolean.TRUE.equals(((JavascriptExecutor) currentDriver)
+                        .executeScript("return typeof window.jQuery === 'function'")));
+                jqueryLoaded = true;
+            } catch (TimeoutException ignored) {
+                // Retry if the page's required script did not load.
+            }
+        }
+        assertTrue(jqueryLoaded, "A biblioteca jQuery do site não carregou após três tentativas");
 
+        WebElement startButton = wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//button[normalize-space()='Start']")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", startButton);
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loading")));
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loading")));
 
         WebElement result = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("finish")));
